@@ -153,59 +153,72 @@ function Hero({ onReserve }: { onReserve: () => void }) {
   const reduced = usePrefersReducedMotion();
   const fade = reduced ? 1 : Math.max(0, 1 - progress * 1.55);
   const second = reduced ? 0 : Math.max(0, Math.min(1, (progress - 0.34) * 2.4)) * Math.max(0, 1 - (progress - 0.78) * 4);
-  const scale = reduced ? 1 : 1.1 - progress * 0.1;
+  const scale = reduced ? 1 : 1.16 - progress * 0.14;
 
   return (
     <section id="top" ref={ref} className="scrub-hero section">
-      <div className="sticky-frame">
+      <div className="sticky-frame hero-stage">
         <img
           src="/apex/graphite.jpg"
           alt="Apex Ion in Plasma Graphite on a wet plaza at dusk"
           width={1792}
           height={1008}
+          fetchPriority="high"
           className="hero-photo"
           style={{ transform: `scale(${scale})` }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-ink/75 via-ink/10 to-ink/80" />
+        <div className="hero-vignette" />
+        <div className="hero-lightwash" />
+        <div className="hero-grain" aria-hidden="true" />
+        <div className="hero-topline" aria-hidden="true">
+          <span>AX / 01</span>
+          <span>Hydrogen electric</span>
+        </div>
         <div
           className={cn(
-            "relative flex h-full flex-col justify-between px-5 pb-10 pt-24",
+            "relative z-10 flex h-full flex-col justify-between px-5 pb-8 pt-28 sm:px-8 sm:pb-10 sm:pt-32 lg:px-12",
             fade < 0.15 && "pointer-events-none",
           )}
           style={{ opacity: fade }}
           inert={fade < 0.2 ? true : undefined}
         >
-          <div className="mx-auto w-full max-w-6xl">
-            <p className="eyebrow">Apex Ion · Hydrogen electric</p>
-            <h1 className="display hero-title mt-4 max-w-4xl">
-              Defying
-              <br />
-              velocity.
+          <div className="mx-auto w-full max-w-7xl">
+            <p className="eyebrow hero-eyebrow">Apex Ion <span aria-hidden="true">/</span> Hydrogen electric</p>
+            <h1 className="display hero-title mt-5 max-w-5xl">
+              <span className="hero-title-line">Defying</span>
+              <span className="hero-title-line hero-title-line-second">velocity<span className="hero-period">.</span></span>
             </h1>
+            <p className="hero-manifesto">A different kind of<br className="hidden sm:block" /> forward motion.</p>
           </div>
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <p className="max-w-sm text-mist/90">
-              A crossover that leaves water, not smoke. Built for cities that still want the pull.
-            </p>
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+            <div className="hero-intro">
+              <span className="hero-index">01 — A new element</span>
+              <p className="mt-3 max-w-sm text-mist/90">
+                A crossover that leaves water, not smoke. Built for cities that still want the pull.
+              </p>
+            </div>
             <div className="flex flex-wrap gap-3">
               <button type="button" className="press btn-copper hit rounded-full px-5 text-sm font-semibold" onClick={onReserve}>
                 Reserve the Ion
               </button>
               <a href="#configure" className="press btn-ghost hit inline-flex items-center rounded-full px-5 text-sm font-semibold">
-                Configure
+                Configure <span className="ml-2" aria-hidden="true">↗</span>
               </a>
             </div>
           </div>
         </div>
         <p
-          className="display title-lg pointer-events-none absolute inset-0 grid place-items-center px-6 text-center"
+          className="display hero-second-line pointer-events-none absolute inset-0 z-10 grid place-items-center px-6 text-center"
           style={{ opacity: second }}
           aria-hidden={second < 0.4}
         >
-          Hydrogen in.
-          <br />
-          Water out.
+          <span>Hydrogen in.<br /><em>Water out.</em></span>
         </p>
+        <div className="hero-bottomline" aria-hidden="true">
+          <span>DESIGNED TO MOVE DIFFERENTLY</span>
+          <span className="hero-scroll-cue"><span /> Scroll to discover</span>
+          <span>ION CONCEPT / 2026</span>
+        </div>
       </div>
     </section>
   );
