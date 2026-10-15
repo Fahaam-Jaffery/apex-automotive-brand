@@ -10,13 +10,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Apex — Defying velocity" },
+      { title: "Tesla — Feel what’s next" },
       {
         name: "description",
         content:
-          "Apex designs emissionless hydrogen-electric vehicles. Meet the Ion crossover and the Grove cabin.",
+          "A cinematic, independent Tesla design concept exploring electric performance, engineering, and Model S and Model X.",
       },
-      { name: "theme-color", content: "#0e1216" },
+      { name: "theme-color", content: "#050505" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
