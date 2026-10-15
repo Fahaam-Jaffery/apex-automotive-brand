@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Apex — Defying velocity",
+      "hasCanvas": false,
+      "bodyTextLen": 2287,
+      "bodyTextHash": "79d7a968247548ccb9aac3365fe0ada32d69b1e5d4eb1ae39f0f21c9bcfc3452",
+      "bodyTextPrefix": "Skip to content Apex Configure Engineering Cabins Lookbook Reser",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Apex — Defying velocity",
+      "hasCanvas": false,
+      "bodyTextLen": 2433,
+      "bodyTextHash": "c0f1d8146b2c1a1a8dc6a91a10bd6aa58b6104ca9a819e3be2f6fae1a7e9d045",
+      "bodyTextPrefix": "Skip to content Apex Reserve Open menu APEX ION · HYDROGEN ELECT",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

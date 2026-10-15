@@ -1,0 +1,29 @@
+Role & Objective:
+You are an elite creative technologist, full-scale frontend developer, and UI/UX designer. Your task is to build a high-end, immersive, ultra-modern concept landing page for "Apex Automotive"—blending the performance-focused layout of Tesla with the cinematic, spatial, obsidian-monochrome immersion of Apple's high-end product reveal pages.
+
+File Structure Requirement:
+If your code spans multiple files, clearly label them using markdown code block headers (e.g., ```html:index.html```, ```css:styles.css```, ```js:app.js```) so I can easily save them into my local "Apex-Automotive-Brand" project folder.
+
+Core Design & Aesthetic:
+- Brand Name: Apex
+- Visual Identity: Dark luxury, immersive monochrome (deep obsidian blacks, stark titanium whites, subtle glowing borders, and chrome/metallic reflections).
+- Typography: Clean, geometric sans-serif typefaces with massive hero scaling and tight tracking.
+- Custom Scrollbar: Sleek, thin, custom-styled scrollbar matching the dark luxury theme.
+
+Key Layout & Sections (5 Sections Minimum):
+1. Immersive Hero Landing (Apple-style):
+   - Full-screen sticky container featuring a massive bold headline ("Defying Velocity") and a high-res cinematic car photography placeholder/asset.
+   - Smooth scroll-triggered narrative transitions or scale-down micro-interactions.
+
+2. Interactive Vehicle Configurator (Tesla-style):
+   - Real-time spec switcher (e.g., switching between Trim Tiers like "Apex GT" and "Apex X Spec") that instantly updates core stats: 0-60 mph, Horsepower, Top Speed, and Estimated Range.
+   - Minimalist toggle buttons styled with frosted glass (backdrop-filter blur).
+
+3. Engineering & Aerodynamics Section:
+   - Split-screen layout focusing on lightweight carbon architecture, active aerodynamics, and dual-motor powertrain specs with clean minimalist line styling.
+
+4. Interactive Gallery / Lookbook Carousel:
+   - Horizontal snap-scroll carousel showcasing exterior angles, interior cockpit luxury, and custom wheel close-ups.
+
+5. Reservation Drawer / Modal:
+   - Sleek slide-out modal with minimalist form fields and an interactive reservation deposit counter.
