@@ -332,3 +332,398 @@
     height: 240vh;
   }
 }
+
+
+/* CINEMATIC REDESIGN — motion and art direction */
+:root {
+  --apex-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --apex-copper-glow: color-mix(in srgb, var(--color-copper) 28%, transparent);
+}
+
+html {
+  scroll-padding-top: 5rem;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+}
+
+.display {
+  text-wrap: balance;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 1.35rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.press {
+  transition:
+    transform 260ms var(--apex-ease),
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 260ms ease;
+}
+
+.press:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn-copper {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-copper) 30%, transparent);
+}
+
+.btn-copper::after {
+  content: "";
+  position: absolute;
+  inset: -40% auto -40% -55%;
+  z-index: -1;
+  width: 35%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 42%), transparent);
+  transition: left 650ms var(--apex-ease);
+}
+
+.btn-copper:hover::after {
+  left: 125%;
+}
+
+.btn-copper:hover {
+  box-shadow: 0 8px 30px var(--apex-copper-glow);
+}
+
+.btn-ghost:hover {
+  background: rgb(243 240 232 / 7%);
+}
+
+.scrub-hero {
+  isolation: isolate;
+  background: #090c10;
+}
+
+.hero-stage {
+  isolation: isolate;
+  background: #090c10;
+}
+
+.hero-photo {
+  object-position: center 56%;
+  filter: saturate(0.88) contrast(1.06);
+  animation: hero-image-arrive 1.8s var(--apex-ease) both;
+}
+
+.hero-vignette,
+.hero-lightwash,
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-vignette {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgb(7 10 13 / 76%) 0%, rgb(7 10 13 / 36%) 39%, rgb(7 10 13 / 4%) 75%),
+    linear-gradient(180deg, rgb(7 10 13 / 54%) 0%, transparent 23%, transparent 58%, rgb(7 10 13 / 80%) 100%);
+}
+
+.hero-lightwash {
+  z-index: 2;
+  opacity: 0.5;
+  background: radial-gradient(ellipse at 72% 45%, rgb(224 138 69 / 13%), transparent 44%);
+  mix-blend-mode: screen;
+  animation: lightwash-breathe 8s ease-in-out infinite alternate;
+}
+
+.hero-grain {
+  z-index: 3;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.hero-topline,
+.hero-bottomline {
+  position: absolute;
+  z-index: 12;
+  left: clamp(1.25rem, 4vw, 3rem);
+  right: clamp(1.25rem, 4vw, 3rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgb(243 240 232 / 66%);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.hero-topline {
+  top: 5.1rem;
+}
+
+.hero-bottomline {
+  bottom: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgb(243 240 232 / 18%);
+}
+
+.hero-eyebrow {
+  animation: hero-copy-arrive 900ms 180ms var(--apex-ease) both;
+}
+
+.hero-title {
+  overflow: visible;
+  font-size: clamp(4rem, 10.2vw, 9.2rem);
+  line-height: 0.82;
+  letter-spacing: -0.075em;
+}
+
+.hero-title-line {
+  display: block;
+  animation: hero-copy-arrive 1100ms 260ms var(--apex-ease) both;
+}
+
+.hero-title-line-second {
+  animation-delay: 420ms;
+}
+
+.hero-period {
+  color: var(--color-copper);
+}
+
+.hero-manifesto {
+  margin-top: clamp(1.5rem, 3vh, 2.6rem);
+  max-width: 26rem;
+  color: rgb(243 240 232 / 82%);
+  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+  letter-spacing: -0.025em;
+  animation: hero-copy-arrive 1000ms 580ms var(--apex-ease) both;
+}
+
+.hero-intro {
+  max-width: 25rem;
+  animation: hero-copy-arrive 1000ms 680ms var(--apex-ease) both;
+}
+
+.hero-index {
+  color: var(--color-copper);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero-second-line {
+  font-size: clamp(3.4rem, 8.6vw, 8rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+  text-shadow: 0 8px 70px rgb(0 0 0 / 28%);
+}
+
+.hero-second-line em {
+  color: var(--color-copper);
+  font-style: normal;
+}
+
+.hero-scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.hero-scroll-cue > span {
+  display: inline-block;
+  width: 2.5rem;
+  height: 1px;
+  background: var(--color-copper);
+  transform-origin: left;
+  animation: scroll-line 1.8s ease-in-out infinite;
+}
+
+#configure {
+  position: relative;
+  overflow: clip;
+}
+
+#configure::before {
+  content: "01 / CONFIGURATION";
+  position: absolute;
+  top: 2rem;
+  right: max(1.25rem, calc((100vw - 72rem) / 2));
+  color: rgb(243 240 232 / 26%);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+}
+
+.config-photo {
+  isolation: isolate;
+  background: #0b0f12;
+}
+
+.config-photo img {
+  transition:
+    opacity 650ms var(--apex-ease),
+    transform 1100ms var(--apex-ease),
+    filter 650ms ease;
+}
+
+.config-photo img.opacity-100 {
+  transform: scale(1.015);
+}
+
+#engineering figure img,
+#cabin img,
+.look-card img {
+  transition: transform 900ms var(--apex-ease), filter 650ms ease;
+}
+
+#engineering figure:hover img,
+.look-card:hover img {
+  transform: scale(1.035);
+  filter: saturate(1.08);
+}
+
+#engineering ol > li {
+  transition: padding-left 350ms var(--apex-ease), background-color 350ms ease;
+}
+
+#engineering ol > li:hover {
+  padding-left: 0.75rem;
+  background: linear-gradient(90deg, rgb(46 184 174 / 5%), transparent 75%);
+}
+
+#engineering ol > li > p:first-child {
+  letter-spacing: 0.12em;
+}
+
+#cabin .scrub-only {
+  isolation: isolate;
+}
+
+.cabin-stage img {
+  transform: scale(1.025);
+}
+
+.cabin-stage.is-light img {
+  filter: saturate(0.92) brightness(1.04);
+}
+
+.look-card {
+  overflow: hidden;
+}
+
+.look-card figcaption span:first-child {
+  transition: color 250ms ease;
+}
+
+.look-card:hover figcaption span:first-child {
+  color: var(--color-copper);
+}
+
+section[id] {
+  scroll-margin-top: 4.5rem;
+}
+
+@keyframes hero-image-arrive {
+  from { transform: scale(1.22); filter: saturate(0.7) contrast(1.02); }
+  to { filter: saturate(0.88) contrast(1.06); }
+}
+
+@keyframes hero-copy-arrive {
+  from { opacity: 0; transform: translateY(28px); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes lightwash-breathe {
+  from { opacity: 0.22; transform: scale(0.96); }
+  to { opacity: 0.55; transform: scale(1.04); }
+}
+
+@keyframes scroll-line {
+  0%, 100% { transform: scaleX(0.55); opacity: 0.6; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+@media (min-width: 64rem) {
+  .hero-title {
+    font-size: clamp(6.8rem, 10.4vw, 10rem);
+  }
+
+  .hero-manifesto {
+    margin-left: clamp(0rem, 13vw, 13rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-topline {
+    top: 4.8rem;
+    font-size: 0.52rem;
+  }
+
+  .hero-bottomline {
+    bottom: 0.6rem;
+    font-size: 0.48rem;
+    letter-spacing: 0.08em;
+  }
+
+  .hero-bottomline > span:first-child {
+    display: none;
+  }
+
+  .hero-title {
+    font-size: clamp(4rem, 16vw, 6rem);
+  }
+
+  .hero-manifesto {
+    max-width: 15rem;
+  }
+
+  #configure::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-photo {
+    animation: none;
+  }
+
+  .hero-title-line,
+  .hero-eyebrow,
+  .hero-manifesto,
+  .hero-intro {
+    animation: none;
+  }
+
+  .hero-lightwash,
+  .hero-scroll-cue > span {
+    animation: none;
+  }
+}
