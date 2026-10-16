@@ -1,829 +1,113 @@
-import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent as KeyEvt } from "react";
-import { ArrowLeft, ArrowRight, Menu, Minus, Plus, X } from "lucide-react";
-import {
-  DEPOSIT_MAX,
-  DEPOSIT_MIN,
-  DEPOSIT_STEP,
-  RESERVE_KEY,
-  engineering,
-  gallery,
-  paints,
-  trims,
-  type PaintId,
-  type Reservation,
-  type TrimId,
-} from "./content";
-import {
-  Mark,
-  Reveal,
-  cn,
-  money,
-  usePrefersReducedMotion,
-  useScrolled,
-  useStickyProgress,
-  useTween,
-} from "./ui";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowRight, ChevronDown, Menu, X, Zap } from "lucide-react";
 
-const NAV = [
-  { href: "#configure", label: "Configure" },
-  { href: "#engineering", label: "Engineering" },
-  { href: "#cabin", label: "Cabins" },
-  { href: "#lookbook", label: "Lookbook" },
+const MODELS = {
+  s: { name: "Model S", tagline: "Beyond the expected.", zero: "2.4", range: "402", power: "1,020", speed: "200", price: "$74,990", image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1800&q=90" },
+  x: { name: "Model X", tagline: "Room for the extraordinary.", zero: "2.5", range: "335", power: "1,020", speed: "163", price: "$79,990", image: "https://images.unsplash.com/photo-1560958089-b8a1929e3f0?auto=format&fit=crop&w=1800&q=90" },
+} as const;
+
+const FEATURES = [
+  { n: "01", title: "Air, reimagined.", label: "ACTIVE AERODYNAMICS", copy: "Every surface earns its place. A sculpted silhouette cuts through the air with less resistance and more intention.", stat: "0.208", unit: "Cd · drag coefficient", image: "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?auto=format&fit=crop&w=1600&q=85" },
+  { n: "02", title: "Instant. Everywhere.", label: "DUAL-MOTOR POWERTRAIN", copy: "Independent motors respond in milliseconds, distributing torque with remarkable precision across changing conditions.", stat: "1,020", unit: "peak horsepower", image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=1600&q=85" },
+  { n: "03", title: "Strength in silence.", label: "ENGINEERED STRUCTURE", copy: "A rigid, purpose-built platform forms the foundation for confident handling, considered safety, and a quieter cabin.", stat: "360°", unit: "designed around you", image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=85" },
 ];
 
 export function Site() {
-  const [trim, setTrim] = useState<TrimId>("x");
-  const [paint, setPaint] = useState<PaintId>("graphite");
-  const [open, setOpen] = useState(false);
-  const reserve = () => setOpen(true);
-
-  return (
-    <>
-      <a className="skip" href="#content">
-        Skip to content
-      </a>
-      <Nav onReserve={reserve} />
-      <main id="content">
-        <Hero onReserve={reserve} />
-        <Promise />
-        <Configure
-          trim={trim}
-          paint={paint}
-          onTrim={setTrim}
-          onPaint={setPaint}
-          onReserve={reserve}
-        />
-        <Engineering />
-        <Cabins />
-        <Lookbook />
-        <Close onReserve={reserve} />
-      </main>
-      <Footer />
-      <ReserveDrawer
-        open={open}
-        onClose={() => setOpen(false)}
-        trim={trim}
-        paint={paint}
-        onTrim={setTrim}
-        onPaint={setPaint}
-      />
-    </>
-  );
-}
-
-function Nav({ onReserve }: { onReserve: () => void }) {
-  const scrolled = useScrolled();
+  const [model, setModel] = useState<"s" | "x">("s");
   const [menu, setMenu] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const narrativeRef = useRef<HTMLElement>(null);
+  const car = MODELS[model];
 
   useEffect(() => {
-    if (!menu) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenu(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [menu]);
-
-  return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-40 transition-colors duration-200",
-        scrolled || menu ? "bg-ink/90 backdrop-blur-md" : "bg-transparent",
-      )}
-    >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <a href="#top" className="flex items-center gap-2 text-mist" onClick={() => setMenu(false)}>
-          <Mark className="h-7 w-7" />
-          <span className="display text-xl tracking-normal">Apex</span>
-        </a>
-        <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary">
-          {NAV.map((item) => (
-            <a key={item.href} href={item.href} className="text-sm text-mist/80 hover:text-mist">
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="press btn-copper hit rounded-full px-4 text-sm font-semibold"
-            onClick={() => {
-              setMenu(false);
-              onReserve();
-            }}
-          >
-            Reserve
-          </button>
-          <button
-            type="button"
-            className="press hit grid place-items-center text-mist lg:hidden"
-            aria-expanded={menu}
-            aria-controls="apex-menu"
-            onClick={() => setMenu((value) => !value)}
-          >
-            {menu ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-            <span className="sr-only">{menu ? "Close menu" : "Open menu"}</span>
-          </button>
-        </div>
-      </div>
-      {menu ? (
-        <nav id="apex-menu" className="border-t border-line px-5 py-6 lg:hidden" aria-label="Mobile">
-          <ul className="grid gap-4">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="display title-md"
-                  onClick={() => setMenu(false)}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ) : null}
-    </header>
-  );
-}
-
-function Hero({ onReserve }: { onReserve: () => void }) {
-  const ref = useRef<HTMLElement>(null);
-  const progress = useStickyProgress(ref);
-  const reduced = usePrefersReducedMotion();
-  const fade = reduced ? 1 : Math.max(0, 1 - progress * 1.55);
-  const second = reduced ? 0 : Math.max(0, Math.min(1, (progress - 0.34) * 2.4)) * Math.max(0, 1 - (progress - 0.78) * 4);
-  const scale = reduced ? 1 : 1.16 - progress * 0.14;
-
-  return (
-    <section id="top" ref={ref} className="scrub-hero section">
-      <div className="sticky-frame hero-stage">
-        <img
-          src="/apex/graphite.jpg"
-          alt="Apex Ion in Plasma Graphite on a wet plaza at dusk"
-          width={1792}
-          height={1008}
-          fetchPriority="high"
-          className="hero-photo"
-          style={{ transform: `scale(${scale})` }}
-        />
-        <div className="hero-vignette" />
-        <div className="hero-lightwash" />
-        <div className="hero-grain" aria-hidden="true" />
-        <div className="hero-topline" aria-hidden="true">
-          <span>AX / 01</span>
-          <span>Hydrogen electric</span>
-        </div>
-        <div
-          className={cn(
-            "relative z-10 flex h-full flex-col justify-between px-5 pb-8 pt-28 sm:px-8 sm:pb-10 sm:pt-32 lg:px-12",
-            fade < 0.15 && "pointer-events-none",
-          )}
-          style={{ opacity: fade }}
-          inert={fade < 0.2 ? true : undefined}
-        >
-          <div className="mx-auto w-full max-w-7xl">
-            <p className="eyebrow hero-eyebrow">Apex Ion <span aria-hidden="true">/</span> Hydrogen electric</p>
-            <h1 className="display hero-title mt-5 max-w-5xl">
-              <span className="hero-title-line">Defying</span>
-              <span className="hero-title-line hero-title-line-second">velocity<span className="hero-period">.</span></span>
-            </h1>
-            <p className="hero-manifesto">A different kind of<br className="hidden sm:block" /> forward motion.</p>
-          </div>
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
-            <div className="hero-intro">
-              <span className="hero-index">01 — A new element</span>
-              <p className="mt-3 max-w-sm text-mist/90">
-                A crossover that leaves water, not smoke. Built for cities that still want the pull.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button type="button" className="press btn-copper hit rounded-full px-5 text-sm font-semibold" onClick={onReserve}>
-                Reserve the Ion
-              </button>
-              <a href="#configure" className="press btn-ghost hit inline-flex items-center rounded-full px-5 text-sm font-semibold">
-                Configure <span className="ml-2" aria-hidden="true">↗</span>
-              </a>
-            </div>
-          </div>
-        </div>
-        <p
-          className="display hero-second-line pointer-events-none absolute inset-0 z-10 grid place-items-center px-6 text-center"
-          style={{ opacity: second }}
-          aria-hidden={second < 0.4}
-        >
-          <span>Hydrogen in.<br /><em>Water out.</em></span>
-        </p>
-        <div className="hero-bottomline" aria-hidden="true">
-          <span>DESIGNED TO MOVE DIFFERENTLY</span>
-          <span className="hero-scroll-cue"><span /> Scroll to discover</span>
-          <span>ION CONCEPT / 2026</span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Promise() {
-  const facts = [
-    { value: "0 g/km", label: "Tailpipe CO₂" },
-    { value: "480 mi", label: "Ion GT range" },
-    { value: "2.9 s", label: "Ion X, 0–60" },
-    { value: "H₂O", label: "What it exhales" },
-  ];
-  return (
-    <section className="border-t border-line px-5 py-20" aria-label="The promise">
-      <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-12 lg:items-end">
-        <Reveal className="lg:col-span-7">
-          <h2 className="display title-lg">
-            The Ion burns nothing. A compact cell turns hydrogen into miles. A battery takes the launch.
-          </h2>
-        </Reveal>
-        <Reveal className="lg:col-span-5" delay={120}>
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-8">
-            {facts.map((fact) => (
-              <li key={fact.label}>
-                <p className="display text-3xl text-mist">{fact.value}</p>
-                <p className="mt-1 text-sm text-mute">{fact.label}</p>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-8 text-sm text-mute">Illustrated figures for the Ion concept.</p>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-function Configure({
-  trim,
-  paint,
-  onTrim,
-  onPaint,
-  onReserve,
-}: {
-  trim: TrimId;
-  paint: PaintId;
-  onTrim: (id: TrimId) => void;
-  onPaint: (id: PaintId) => void;
-  onReserve: () => void;
-}) {
-  const reduced = usePrefersReducedMotion();
-  const spec = trims[trim];
-  const finish = paints.find((item) => item.id === paint) ?? paints[0];
-  const zero = useTween(spec.zeroToSixty, reduced);
-  const hp = useTween(spec.horsepower, reduced);
-  const top = useTween(spec.topSpeed, reduced);
-  const range = useTween(spec.range, reduced);
-  const tablist = useId();
-
-  const onTabKey = (event: KeyEvt<HTMLButtonElement>, id: TrimId) => {
-    const order: TrimId[] = ["gt", "x"];
-    const index = order.indexOf(id);
-    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-      event.preventDefault();
-      const next = event.key === "ArrowRight" ? order[(index + 1) % order.length] : order[(index + order.length - 1) % order.length];
-      if (next) onTrim(next);
-    }
-  };
-
-  const stats = [
-    { label: "0–60 mph", value: zero.toFixed(1), unit: "sec" },
-    { label: "Horsepower", value: Math.round(hp).toString(), unit: "hp" },
-    { label: "Top speed", value: Math.round(top).toString(), unit: "mph" },
-    { label: "Est. range", value: Math.round(range).toString(), unit: "mi" },
-  ];
-
-  return (
-    <section id="configure" className="section border-t border-line bg-panel px-5 py-20">
-      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-12 lg:items-stretch">
-        <div className="frame config-photo overflow-hidden rounded-2xl lg:col-span-7">
-          {paints.map((item) => (
-            <img
-              key={item.id}
-              src={item.src}
-              alt={item.id === paint ? `Apex Ion in ${item.name}` : ""}
-              width={1792}
-              height={1008}
-              className={cn(
-                "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
-                item.id === paint ? "opacity-100" : "opacity-0",
-              )}
-            />
-          ))}
-        </div>
-        <div className="lg:col-span-5">
-          <p className="eyebrow">Configure</p>
-          <h2 className="display title-md mt-3">{spec.name}</h2>
-          <p className="mt-3 text-mute">{spec.blurb}</p>
-          <p className="mt-4 text-sm text-mist">From {money(spec.price)}</p>
-
-          <div className="mt-8" role="tablist" aria-label="Trim" id={tablist}>
-            <div className="glass inline-flex rounded-full p-1">
-              {(Object.keys(trims) as TrimId[]).map((id) => {
-                const item = trims[id];
-                const selected = id === trim;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    tabIndex={selected ? 0 : -1}
-                    className={cn(
-                      "press hit rounded-full px-4 text-sm font-semibold",
-                      selected ? "bg-mist text-ink" : "text-mist",
-                    )}
-                    onClick={() => onTrim(id)}
-                    onKeyDown={(event) => onTabKey(event, id)}
-                  >
-                    {item.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <fieldset className="mt-8">
-            <legend className="text-sm text-mute">Finish · {finish.name}</legend>
-            <div className="mt-3 flex gap-3" role="radiogroup" aria-label="Finish">
-              {paints.map((item) => {
-                const selected = item.id === paint;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    aria-label={item.name}
-                    className="press hit grid place-items-center"
-                    onClick={() => onPaint(item.id)}
-                  >
-                    <span className={cn("swatch", item.swatch, selected && "swatch-on")} />
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-
-          <dl className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-line pt-6" aria-live="polite">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <dt className="text-sm text-mute">{stat.label}</dt>
-                <dd className="display nums mt-1 text-4xl">
-                  {stat.value}
-                  <span className="ml-1 font-sans text-sm font-medium tracking-normal text-mute">{stat.unit}</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          <button type="button" className="press btn-copper mt-8 hit rounded-full px-5 text-sm font-semibold" onClick={onReserve}>
-            Reserve this Ion
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Engineering() {
-  return (
-    <section id="engineering" className="section px-5 py-24">
-      <div className="mx-auto max-w-6xl">
-        <Reveal>
-          <p className="eyebrow">Engineering</p>
-          <h2 className="display title-lg mt-3 max-w-3xl">The machinery stays out of the way.</h2>
-        </Reveal>
-        <div className="mt-12 grid items-start gap-10 lg:grid-cols-2">
-          <figure className="overflow-hidden rounded-2xl">
-            <img
-              src="/apex/rear.jpg"
-              alt="Rear three-quarter of the Apex Ion with its light blade lit"
-              width={1792}
-              height={1008}
-              className="frame w-full object-cover"
-            />
-          </figure>
-          <ol className="divide-y divide-line border-y border-line">
-            {engineering.map((item) => (
-              <li key={item.index} className="grid gap-3 py-6 sm:grid-cols-12">
-                <p className="text-sm text-hydro sm:col-span-2">{item.index}</p>
-                <div className="sm:col-span-6">
-                  <h3 className="display text-2xl">{item.title}</h3>
-                  <p className="mt-2 text-sm text-mute">{item.body}</p>
-                </div>
-                <p className="sm:col-span-4 sm:text-right">
-                  <span className="display text-2xl">{item.figure}</span>
-                  <span className="mt-1 block text-sm text-mute">{item.caption}</span>
-                </p>
-              </li>
-            ))}
-          </ol>
-        </div>
-        <figure className="relative mt-8 overflow-hidden rounded-2xl">
-          <img
-            src="/apex/cell.jpg"
-            alt="Hydrogen filler door open on the Ion, sage ring and a single droplet mark"
-            width={1728}
-            height={1152}
-            className="aspect-video w-full object-cover"
-          />
-          <figcaption className="absolute inset-x-0 bottom-0 bg-linear-to-t from-ink via-ink/70 to-transparent p-6 pt-16 sm:p-8">
-            <p className="display title-md max-w-xl">The cell drinks hydrogen. The only exhaust is water.</p>
-          </figcaption>
-        </figure>
-      </div>
-    </section>
-  );
-}
-
-const CABINS = [
-  {
-    id: "ion",
-    kicker: "Ion cockpit",
-    title: "A horizon, not a cluster.",
-    body: "Glass runs the width of the dash and stays dark until you ask. Copper stitch is the only warm line. The sky is allowed to be the instrument.",
-    src: "/apex/cockpit.jpg",
-    alt: "Ion cockpit at twilight, pearl seats with copper stitching and a wide horizon display",
-    light: false,
-  },
-  {
-    id: "grove",
-    kicker: "Grove cabin",
-    title: "Soft, and accounted for.",
-    body: "The city car wears a mineral weave and sage fiber. No hide. A flat floor, four honest seats, daylight doing most of the work. Safe on purpose.",
-    src: "/apex/cabin.jpg",
-    alt: "Apex Grove with both doors open, pale sage body and woven textile seats",
-    light: true,
-  },
-] as const;
-
-function CabinCopy({ chapter }: { chapter: (typeof CABINS)[number] }) {
-  return (
-    <div className="max-w-xl">
-      <p className="eyebrow">{chapter.kicker}</p>
-      <h3 className="display title-md mt-3">{chapter.title}</h3>
-      <p className="quiet mt-4">{chapter.body}</p>
-    </div>
-  );
-}
-
-function Cabins() {
-  const ref = useRef<HTMLElement>(null);
-  const progress = useStickyProgress(ref);
-  const light = progress >= 0.5;
-  const chapter = light ? CABINS[1] : CABINS[0];
-
-  return (
-    <section id="cabin" className="section border-t border-line" ref={ref}>
-      <div className="stack-only lg:hidden">
-        <div className="px-5 py-16">
-          <p className="eyebrow">Cabins</p>
-          <h2 className="display title-lg mt-3 max-w-xl">
-            Two rooms. One rule: nothing wasted, nothing burned.
-          </h2>
-        </div>
-        {CABINS.map((item) => (
-          <article key={item.id} className={item.light ? "bg-mist text-ink" : "bg-ink text-mist"}>
-            <img src={item.src} alt={item.alt} width={1792} height={1008} className="frame w-full object-cover" />
-            <div className="px-5 py-10">
-              <p className={cn("eyebrow", item.light && "text-copper")}>{item.kicker}</p>
-              <h3 className="display title-md mt-3">{item.title}</h3>
-              <p className={cn("mt-4", item.light ? "text-ink-soft" : "text-mute")}>{item.body}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="scrub-only scrub-cabin hidden lg:block">
-        <div className={cn("sticky-frame cabin-stage", light && "is-light")}>
-          <div className="flex h-full flex-col justify-between px-14 py-16">
-            <div>
-              <p className="eyebrow">Cabins</p>
-              <h2 className="display title-lg mt-3">Two rooms. One rule.</h2>
-            </div>
-            <CabinCopy chapter={chapter} />
-            <p className="quiet text-sm">
-              {light ? "Grove · the daylight city car" : "Ion · the hydrogen crossover"} · scroll
-            </p>
-          </div>
-          <div className="relative h-full">
-            {CABINS.map((item) => (
-              <img
-                key={item.id}
-                src={item.src}
-                alt={item.alt}
-                width={1792}
-                height={1008}
-                className={cn(
-                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
-                  (item.light ? light : !light) ? "opacity-100" : "opacity-0",
-                )}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Lookbook() {
-  const scroller = useRef<HTMLDivElement>(null);
-  const reduced = usePrefersReducedMotion();
-
-  const move = (direction: number) => {
-    const node = scroller.current;
-    if (!node) return;
-    node.scrollBy({
-      left: direction * Math.round(node.clientWidth * 0.8),
-      behavior: reduced ? "auto" : "smooth",
-    });
-  };
-
-  return (
-    <section id="lookbook" className="section border-t border-line py-20">
-      <div className="mx-auto flex max-w-6xl items-end justify-between gap-6 px-5">
-        <div>
-          <p className="eyebrow">Lookbook</p>
-          <h2 className="display title-md mt-3">Angles, then the room you sit in.</h2>
-        </div>
-        <div className="hidden gap-2 sm:flex">
-          <button type="button" className="press btn-ghost hit grid place-items-center rounded-full" onClick={() => move(-1)} aria-label="Previous frames">
-            <ArrowLeft aria-hidden="true" />
-          </button>
-          <button type="button" className="press btn-ghost hit grid place-items-center rounded-full" onClick={() => move(1)} aria-label="Next frames">
-            <ArrowRight aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-      <div
-        ref={scroller}
-        className="look-scroller mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2"
-      >
-        {gallery.map((item) => (
-          <figure key={item.src} className="look-card">
-            <img
-              src={item.src}
-              alt={item.alt}
-              width={1792}
-              height={1008}
-              loading="lazy"
-              className="frame w-full rounded-2xl object-cover"
-            />
-            <figcaption className="mt-3 flex items-baseline justify-between gap-4">
-              <span className="font-medium">{item.title}</span>
-              <span className="text-sm text-mute">{item.note}</span>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Close({ onReserve }: { onReserve: () => void }) {
-  return (
-    <section className="border-t border-line px-5 py-24">
-      <div className="mx-auto max-w-6xl">
-        <p className="eyebrow">First wave</p>
-        <h2 className="display hero-title mt-4 max-w-4xl">Hold an Ion.</h2>
-        <p className="mt-6 max-w-lg text-mute">
-          A refundable deposit places the GT or the X in your name. Grove follows in the same quiet line.
-        </p>
-        <button type="button" className="press btn-copper mt-8 hit rounded-full px-6 text-sm font-semibold" onClick={onReserve}>
-          Open reservation
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-line px-5 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Mark className="h-6 w-6" />
-          <p className="display text-lg">Apex</p>
-        </div>
-        <p className="max-w-md text-sm text-mute">
-          Emissionless transport. Hydrogen, engineered. Ion and Grove are design studies — figures are illustrative, holds stay on this device.
-        </p>
-      </div>
-    </footer>
-  );
-}
-
-function ReserveDrawer({
-  open,
-  onClose,
-  trim,
-  paint,
-  onTrim,
-  onPaint,
-}: {
-  open: boolean;
-  onClose: () => void;
-  trim: TrimId;
-  paint: PaintId;
-  onTrim: (id: TrimId) => void;
-  onPaint: (id: PaintId) => void;
-}) {
-  const titleId = useId();
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [city, setCity] = useState("");
-  const [deposit, setDeposit] = useState(1000);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState<Reservation | null>(null);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(RESERVE_KEY);
-      if (raw) setSaved(JSON.parse(raw) as Reservation);
-    } catch {
-      setSaved(null);
-    }
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    titleRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open, onClose]);
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (name.trim().length < 2) {
-      setError("Add the name the hold should sit under.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("That email does not look complete.");
-      return;
-    }
-    if (city.trim().length < 2) {
-      setError("Add a city for the first wave.");
-      return;
-    }
-    const next: Reservation = {
-      name: name.trim(),
-      email: email.trim(),
-      city: city.trim(),
-      trim,
-      paint,
-      deposit,
-      code: `AX-${Date.now().toString(36).toUpperCase().slice(-6)}`,
-    };
-    localStorage.setItem(RESERVE_KEY, JSON.stringify(next));
-    setSaved(next);
-    setError("");
-  };
-
-  const clearHold = () => {
-    localStorage.removeItem(RESERVE_KEY);
-    setSaved(null);
-  };
-
-  const finish = paints.find((item) => item.id === paint) ?? paints[0];
+    const root = narrativeRef.current;
+    if (!root) return;
+    const nodes = root.querySelectorAll<HTMLElement>("[data-feature]");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) setActiveFeature(Number((entry.target as HTMLElement).dataset.feature));
+      });
+    }, { rootMargin: "-38% 0px -38% 0px", threshold: 0 });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className={cn("fixed inset-0 z-50", open ? "pointer-events-auto" : "pointer-events-none")} aria-hidden={!open}>
-      <button
-        type="button"
-        className={cn("absolute inset-0 bg-ink/70 transition-opacity duration-200", open ? "opacity-100" : "opacity-0")}
-        aria-label="Close reservation"
-        tabIndex={open ? 0 : -1}
-        onClick={onClose}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className={cn(
-          "absolute top-0 right-0 flex h-full w-full max-w-md flex-col bg-panel shadow-2xl transition-transform duration-200",
-          open ? "translate-x-0" : "translate-x-full",
-        )}
-      >
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h2 id={titleId} ref={titleRef} tabIndex={-1} className="display text-2xl outline-none">
-            Reserve
-          </h2>
-          <button type="button" className="press hit grid place-items-center" onClick={onClose} aria-label="Close">
-            <X aria-hidden="true" />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-5 py-6">
-          {saved ? (
-            <div>
-              <p className="eyebrow">Hold placed</p>
-              <p className="display title-md mt-3">You are in the wave.</p>
-              <p className="mt-3 text-mute">
-                {saved.name}, {trims[saved.trim].name} in {paints.find((item) => item.id === saved.paint)?.name}. {saved.city}.
-              </p>
-              <p className="display nums mt-6 text-4xl">{money(saved.deposit)}</p>
-              <p className="mt-1 text-sm text-mute">Refundable deposit · reference {saved.code}</p>
-              <button type="button" className="press btn-ghost mt-8 hit rounded-full px-5 text-sm" onClick={clearHold}>
-                Release this hold
-              </button>
+    <div className="tesla-site">
+      <style>{CSS}</style>
+      <header className={`tnav ${scrolled ? "tnav-solid" : ""}`}>
+        <a className="wordmark" href="#top" aria-label="Tesla home">TESLA</a>
+        <nav className="desktop-nav"><a href="#design">Design</a><a href="#engineering">Engineering</a><a href="#models">Models</a></nav>
+        <a className="nav-cta" href="#models">Explore the range <ArrowRight size={14}/></a>
+        <button className="menu-toggle" aria-label={menu ? "Close menu" : "Open menu"} onClick={() => setMenu(!menu)}>{menu ? <X/> : <Menu/>}</button>
+        {menu && <nav className="mobile-menu"><a onClick={() => setMenu(false)} href="#design">Design</a><a onClick={() => setMenu(false)} href="#engineering">Engineering</a><a onClick={() => setMenu(false)} href="#models">Models</a></nav>}
+      </header>
+
+      <main>
+        <section className="hero" id="top">
+          <img className="hero-image" src={car.image} alt={`${car.name} in a cinematic setting`} />
+          <div className="hero-shade"/>
+          <div className="hero-meta"><span>TESLA / PERFORMANCE</span><span>DESIGNED FOR THE FEELING</span></div>
+          <div className="hero-copy">
+            <p className="kicker"><span className="live-dot"/> THE NEXT EXPRESSION OF ELECTRIC</p>
+            <h1 key={model}>{car.name}<span className="period">.</span></h1>
+            <p className="hero-sub" key={car.tagline}>{car.tagline} <span>Electric performance, distilled.</span></p>
+            <div className="hero-actions"><a className="pill pill-light" href="#models">Discover {car.name} <ArrowRight size={15}/></a><a className="text-link" href="#design">Explore the experience <ArrowDown size={14}/></a></div>
+          </div>
+          <div className="hero-foot"><span>PURE ELECTRIC PERFORMANCE</span><span className="scroll-cue"><span/> SCROLL TO EXPERIENCE</span><span>01 — 04</span></div>
+        </section>
+
+        <section className="manifesto" id="design">
+          <p className="kicker reveal">A STUDY IN LESS</p>
+          <h2 className="manifesto-title reveal">The future doesn't need<br/>to shout<span className="period">.</span></h2>
+          <div className="manifesto-bottom reveal"><p>Every line. Every surface. Every millisecond. Nothing is added without a reason — and nothing essential is left behind.</p><span className="vertical-label">DESIGN / 001</span></div>
+          <div className="manifesto-image-wrap"><img src="https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&w=2000&q=90" alt="Minimal electric performance car detail" loading="lazy"/><span className="image-caption">FORM FOLLOWS FEELING — 001</span></div>
+        </section>
+
+        <section className="narrative" id="engineering" ref={narrativeRef}>
+          <div className="narrative-sticky">
+            <div className="narrative-head"><p className="kicker">CLOSER LOOK / ENGINEERED WITH INTENTION</p><h2>More than<br/>meets the eye<span className="period">.</span></h2><p className="narrative-intro">A different perspective on the details that move everything forward.</p></div>
+            <div className="feature-visual">
+              {FEATURES.map((f, i) => <img key={f.n} className={`feature-image ${activeFeature === i ? "feature-image-active" : ""}`} src={f.image} alt={f.label} loading="lazy"/>)}
+              <div className="visual-index">0{activeFeature + 1}<span> / 03</span></div>
             </div>
-          ) : (
-            <form onSubmit={submit} className="grid gap-6">
-              <p className="text-sm text-mute">
-                A hold is a place in the first illustrated wave. It stays on this device and can be released any time.
-              </p>
-              <div className="glass flex rounded-full p-1">
-                {(Object.keys(trims) as TrimId[]).map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={cn(
-                      "press hit flex-1 rounded-full text-sm font-semibold",
-                      id === trim ? "bg-mist text-ink" : "text-mist",
-                    )}
-                    onClick={() => onTrim(id)}
-                  >
-                    {trims[id].name}
-                  </button>
-                ))}
-              </div>
-              <fieldset>
-                <legend className="text-sm text-mute">Finish · {finish.name}</legend>
-                <div className="mt-3 flex gap-3">
-                  {paints.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="press hit grid place-items-center"
-                      aria-label={item.name}
-                      aria-pressed={item.id === paint}
-                      onClick={() => onPaint(item.id)}
-                    >
-                      <span className={cn("swatch", item.swatch, item.id === paint && "swatch-on")} />
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-              <div>
-                <p className="text-sm text-mute">Deposit</p>
-                <div className="mt-2 flex items-center justify-between">
-                  <button
-                    type="button"
-                    className="press btn-ghost hit grid place-items-center rounded-full"
-                    aria-label="Decrease deposit"
-                    onClick={() => setDeposit((value) => Math.max(DEPOSIT_MIN, value - DEPOSIT_STEP))}
-                    disabled={deposit <= DEPOSIT_MIN}
-                  >
-                    <Minus aria-hidden="true" />
-                  </button>
-                  <p className="display nums text-4xl">{money(deposit)}</p>
-                  <button
-                    type="button"
-                    className="press btn-ghost hit grid place-items-center rounded-full"
-                    aria-label="Increase deposit"
-                    onClick={() => setDeposit((value) => Math.min(DEPOSIT_MAX, value + DEPOSIT_STEP))}
-                    disabled={deposit >= DEPOSIT_MAX}
-                  >
-                    <Plus aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-              <label className="block text-sm text-mute">
-                Name
-                <input className="field" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
-              </label>
-              <label className="block text-sm text-mute">
-                Email
-                <input className="field" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
-              </label>
-              <label className="block text-sm text-mute">
-                City
-                <input className="field" value={city} onChange={(event) => setCity(event.target.value)} autoComplete="address-level2" />
-              </label>
-              {error ? (
-                <p className="text-sm text-copper" role="alert">
-                  {error}
-                </p>
-              ) : null}
-              <button type="submit" className="press btn-copper hit rounded-full text-sm font-semibold">
-                Place hold · {money(deposit)}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
+            <div className="feature-copy" aria-live="polite"><p className="kicker">{FEATURES[activeFeature].label}</p><h3 key={FEATURES[activeFeature].title}>{FEATURES[activeFeature].title}</h3><p key={FEATURES[activeFeature].copy} className="feature-description">{FEATURES[activeFeature].copy}</p><div className="feature-stat"><strong>{FEATURES[activeFeature].stat}</strong><span>{FEATURES[activeFeature].unit}</span></div><div className="feature-progress">{FEATURES.map((f,i)=><button key={f.n} aria-label={`Show feature ${f.n}`} onClick={()=>{setActiveFeature(i);document.getElementById(`feature-step-${i}`)?.scrollIntoView({behavior:"smooth",block:"center"});}} className={activeFeature===i?"progress-active":""}/>)}</div></div>
+          </div>
+          <div className="narrative-steps">{FEATURES.map((f,i)=><article id={`feature-step-${i}`} data-feature={i} className="narrative-step" key={f.n}><span>{f.n} / {f.label}</span><h3>{f.title}</h3><p>{f.copy}</p></article>)}</div>
+        </section>
+
+        <section className="numbers">
+          <p className="kicker reveal">PERFORMANCE, WITHOUT COMPROMISE</p><h2 className="reveal">Numbers that<br/>tell a feeling.</h2>
+          <div className="number-grid"><div className="number-cell reveal"><strong>2.4<span>s</span></strong><p>0–60 mph</p></div><div className="number-cell reveal"><strong>402<span>mi</span></strong><p>EPA-est. range</p></div><div className="number-cell reveal"><strong>1,020</strong><p>Peak horsepower</p></div><div className="number-cell reveal"><strong>200<span>mph</span></strong><p>Top track speed</p></div></div>
+          <p className="disclaimer">Illustrative Model S Plaid specifications. Actual range and performance vary with configuration, conditions and driving style. Check Tesla for current details.</p>
+        </section>
+
+        <section className="model-selector" id="models">
+          <div className="selector-heading"><p className="kicker">FIND YOUR FORM</p><h2>Choose your perspective<span className="period">.</span></h2><p>Two expressions. One electric ambition.</p></div>
+          <div className="model-tabs" role="tablist" aria-label="Choose a Tesla model"><button role="tab" aria-selected={model==="s"} className={model==="s"?"model-tab active":"model-tab"} onClick={()=>setModel("s")}>Model S <span>01</span></button><button role="tab" aria-selected={model==="x"} className={model==="x"?"model-tab active":"model-tab"} onClick={()=>setModel("x")}>Model X <span>02</span></button></div>
+          <div className="configurator">
+            <div className="config-image"><img key={car.image} src={car.image} alt={car.name} loading="lazy"/><span className="config-stamp">TESLA / {model==="s"?"S":"X"}</span></div>
+            <div className="config-details"><p className="kicker">ALL-ELECTRIC / {model==="s"?"LUXURY SEDAN":"PERFORMANCE SUV"}</p><h3 key={car.name}>{car.name}<span className="period">.</span></h3><p className="config-tagline">{car.tagline}</p><div className="spec-grid"><div><strong>{car.zero}<small>s</small></strong><span>0–60 mph</span></div><div><strong>{car.range}<small>mi</small></strong><span>Est. range</span></div><div><strong>{car.power}</strong><span>Horsepower</span></div><div><strong>{car.speed}<small>mph</small></strong><span>Top speed</span></div></div><div className="config-bottom"><div><span className="price-label">STARTING AT</span><strong className="price">{car.price}</strong></div><a className="pill pill-light" href="https://www.tesla.com/" target="_blank" rel="noreferrer">Explore Tesla <ArrowRight size={15}/></a></div><p className="disclaimer">Specifications shown for concept presentation; verify current configurations, pricing and availability on Tesla.com.</p></div>
+          </div>
+        </section>
+
+        <section className="closing">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2000&q=90" alt="Sculpted performance car in dramatic light" loading="lazy"/><div className="closing-shade"/><div className="closing-copy"><p className="kicker">THE DRIVE IS YOURS</p><h2>Feel what’s<br/>next<span className="period">.</span></h2><a className="pill pill-light" href="#models">Find your Tesla <ArrowRight size={15}/></a></div><span className="closing-note">DESIGNED FOR THE ROAD AHEAD</span>
+        </section>
+      </main>
+      <footer className="footer"><a className="wordmark" href="#top">TESLA</a><span>AN INDEPENDENT DESIGN CONCEPT · NOT AN OFFICIAL TESLA WEBSITE</span><a href="#top">BACK TO TOP ↑</a><small>© 2026 CONCEPT EXPERIENCE</small></footer>
     </div>
   );
 }
+
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+.tesla-site{--black:#050505;--white:#f5f5f7;--silver:#e3e3e5;--grey:#86868b;--line:#262629;background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;overflow:clip}.tesla-site *{box-sizing:border-box}.tesla-site a{color:inherit;text-decoration:none}.tesla-site button{font:inherit;color:inherit;cursor:pointer}.tesla-site img{display:block;width:100%;object-fit:cover}.tnav{position:fixed;z-index:50;inset:0 0 auto;height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(22px,5vw,76px);transition:background .35s,border-color .35s;border-bottom:1px solid transparent}.tnav-solid{background:rgba(5,5,5,.78);backdrop-filter:blur(24px);border-color:rgba(255,255,255,.07)}.wordmark{font-weight:800;letter-spacing:.28em;font-size:18px}.desktop-nav{display:flex;gap:38px;margin-left:6%}.desktop-nav a,.nav-cta{font-size:12px;color:#d3d3d7;transition:color .2s}.desktop-nav a:hover,.nav-cta:hover{color:white}.nav-cta{display:flex;align-items:center;gap:9px}.menu-toggle,.mobile-menu{display:none}.hero{height:100svh;min-height:690px;position:relative;isolation:isolate;overflow:hidden;background:#111}.hero-image{position:absolute;inset:0;height:100%;object-position:center 57%;filter:brightness(.75) saturate(.7);animation:heroArrive 1.7s cubic-bezier(.2,.8,.2,1) both}.hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.73),rgba(0,0,0,.12) 78%),linear-gradient(0deg,rgba(0,0,0,.65),transparent 40%,rgba(0,0,0,.25));z-index:1}.hero-meta,.hero-foot{position:absolute;z-index:2;left:clamp(22px,5vw,76px);right:clamp(22px,5vw,76px);display:flex;align-items:center;justify-content:space-between;color:#c6c6c9;font-size:9px;letter-spacing:.18em}.hero-meta{top:100px}.hero-copy{position:absolute;z-index:2;left:clamp(22px,10.5vw,160px);top:49%;transform:translateY(-48%);max-width:850px}.kicker{font-size:9px;letter-spacing:.19em;font-weight:700;color:#a7a7ad;line-height:1.6}.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#f5f5f7;margin:0 9px 1px 0;box-shadow:0 0 14px #fff}.hero h1{font-family:Manrope,sans-serif;font-size:clamp(76px,13vw,184px);font-weight:500;letter-spacing:-.095em;line-height:.9;margin:27px 0 20px;animation:copyIn .8s both}.period{color:#9c9ca2}.hero-sub{font-size:clamp(17px,2vw,23px);font-weight:300;letter-spacing:-.035em;color:#f3f3f4}.hero-sub span{display:block;font-size:14px;color:#b5b5bb;margin-top:8px;letter-spacing:0}.hero-actions{display:flex;align-items:center;gap:27px;margin-top:36px}.pill{display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:46px;padding:0 22px;border-radius:99px;font-size:11px;font-weight:600;transition:transform .25s,background .25s,color .25s}.pill:hover{transform:translateY(-2px)}.pill-light{background:var(--white);color:#111!important}.pill-light:hover{background:#d8d8dc}.text-link{display:inline-flex;align-items:center;gap:10px;font-size:11px;color:#ddd}.hero-foot{bottom:26px;border-top:1px solid #ffffff36;padding-top:17px}.scroll-cue{display:flex;align-items:center;gap:10px}.scroll-cue span{width:28px;height:1px;background:#aaa;animation:linePulse 1.7s infinite}.manifesto{padding:clamp(100px,14vw,190px) clamp(22px,11vw,165px) 110px;position:relative}.manifesto-title,.narrative-head h2,.numbers h2,.selector-heading h2{font-family:Manrope,sans-serif;font-weight:400;font-size:clamp(48px,8.4vw,116px);letter-spacing:-.085em;line-height:.99;margin:35px 0 0}.manifesto-bottom{display:flex;justify-content:space-between;align-items:end;gap:40px;margin:48px 0 90px}.manifesto-bottom p{max-width:370px;color:var(--grey);font-size:14px;line-height:1.9;font-weight:300}.vertical-label{font-size:9px;letter-spacing:.17em;color:#777;writing-mode:vertical-rl}.manifesto-image-wrap{position:relative;margin-left:-4vw;margin-right:-4vw;height:min(66vw,680px);min-height:300px;overflow:hidden}.manifesto-image-wrap img{height:100%;filter:brightness(.76) saturate(.55);transition:transform 1.2s}.manifesto-image-wrap:hover img{transform:scale(1.025)}.image-caption{position:absolute;bottom:22px;left:24px;color:#e5e5e5;font-size:9px;letter-spacing:.16em}.narrative{position:relative;min-height:300vh;border-top:1px solid #ffffff14;border-bottom:1px solid #ffffff14}.narrative-sticky{height:100svh;min-height:700px;position:sticky;top:0;display:grid;grid-template-columns:1fr 1.15fr .85fr;align-items:center;gap:4vw;padding:110px clamp(22px,5vw,76px) 60px;overflow:hidden}.narrative-head h2{font-size:clamp(43px,5vw,70px);margin-top:28px}.narrative-intro{max-width:260px;margin-top:25px;font-size:13px;color:var(--grey);line-height:1.8}.feature-visual{position:relative;height:min(60vh,570px);min-height:330px;overflow:hidden;background:#101012;border-radius:3px}.feature-image{position:absolute;inset:0;height:100%;opacity:0;transform:scale(1.055);filter:brightness(.6) saturate(.6);transition:opacity .75s,transform 1.1s cubic-bezier(.2,.8,.2,1)}.feature-image-active{opacity:1;transform:scale(1)}.visual-index{position:absolute;bottom:22px;left:22px;font-size:13px;letter-spacing:.12em}.visual-index span{color:#aaa}.feature-copy{padding:0 0 0 1vw}.feature-copy h3{font-family:Manrope,sans-serif;font-size:clamp(29px,3.4vw,48px);font-weight:400;letter-spacing:-.07em;line-height:1.05;margin:20px 0;animation:copyIn .45s both}.feature-description{font-size:12px;line-height:1.9;color:var(--grey);max-width:300px;min-height:92px}.feature-stat{border-top:1px solid var(--line);padding-top:24px;margin-top:28px;display:flex;flex-direction:column;gap:5px}.feature-stat strong{font-family:Manrope,sans-serif;font-size:38px;font-weight:400;letter-spacing:-.06em}.feature-stat span{font-size:10px;color:var(--grey)}.feature-progress{display:flex;gap:6px;margin-top:30px}.feature-progress button{height:3px;flex:1;background:#353539;border:0;padding:0;transition:background .3s}.feature-progress button.progress-active{background:#eee}.narrative-steps{position:absolute;inset:0;pointer-events:none}.narrative-step{height:100vh;min-height:700px;display:flex;flex-direction:column;justify-content:end;padding:0 5vw 7vh;opacity:0}.narrative-step span,.narrative-step h3,.narrative-step p{max-width:300px}.narrative-step span{font-size:9px;letter-spacing:.15em}.narrative-step h3{font-size:26px;font-weight:400;margin:10px 0}.narrative-step p{font-size:12px;line-height:1.7;color:var(--grey)}.numbers{padding:clamp(100px,14vw,180px) clamp(22px,11vw,165px);background:#080809}.numbers h2{font-size:clamp(48px,7vw,92px);margin-top:25px}.number-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:80px}.number-cell{padding:32px 12px 30px 0;border-right:1px solid var(--line)}.number-cell:not(:first-child){padding-left:clamp(14px,3vw,42px)}.number-cell:last-child{border:0}.number-cell strong{font-family:Manrope,sans-serif;font-weight:400;font-size:clamp(32px,4.3vw,58px);letter-spacing:-.07em;white-space:nowrap}.number-cell strong span{font-size:.38em;letter-spacing:-.02em;margin-left:3px}.number-cell p{font-size:11px;color:var(--grey);margin-top:12px}.disclaimer{font-size:9px;line-height:1.7;color:#66666d;margin-top:22px}.model-selector{padding:clamp(100px,13vw,170px) clamp(22px,8vw,120px)}.selector-heading{text-align:center}.selector-heading h2{font-size:clamp(43px,6.5vw,85px);margin-top:23px}.selector-heading>p:last-child{font-size:13px;color:var(--grey);margin-top:20px}.model-tabs{display:flex;justify-content:center;gap:12px;margin:54px 0 28px}.model-tab{padding:12px 18px;background:transparent;border:1px solid var(--line);border-radius:99px;color:#aaa!important;font-size:12px;transition:all .25s}.model-tab span{font-size:9px;margin-left:12px;color:#666}.model-tab.active{background:#f5f5f7;color:#111!important;border-color:#f5f5f7}.model-tab.active span{color:#666}.configurator{max-width:1260px;margin:0 auto;display:grid;grid-template-columns:1.15fr .85fr;background:#0b0b0c;border:1px solid #ffffff12}.config-image{min-height:490px;position:relative;overflow:hidden}.config-image img{position:absolute;inset:0;height:100%;animation:heroArrive .8s both;filter:brightness(.75) saturate(.65)}.config-stamp{position:absolute;bottom:22px;left:24px;font-size:9px;letter-spacing:.2em;color:#ddd}.config-details{padding:clamp(28px,4vw,58px);display:flex;flex-direction:column;justify-content:center}.config-details h3{font-family:Manrope,sans-serif;font-size:clamp(45px,5vw,66px);font-weight:400;letter-spacing:-.08em;margin-top:22px;animation:copyIn .4s both}.config-tagline{color:var(--grey);font-size:13px;margin-top:7px}.spec-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:34px}.spec-grid>div{padding:20px 10px 20px 0;display:flex;flex-direction:column;gap:8px}.spec-grid>div:nth-child(even){padding-left:18px;border-left:1px solid var(--line)}.spec-grid>div:nth-child(n+3){border-top:1px solid var(--line)}.spec-grid strong{font-family:Manrope,sans-serif;font-size:32px;font-weight:400;letter-spacing:-.06em}.spec-grid small{font-size:12px;color:var(--grey);margin-left:3px}.spec-grid span{font-size:10px;color:var(--grey)}.config-bottom{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:28px}.price-label{display:block;font-size:8px;letter-spacing:.16em;color:var(--grey);margin-bottom:7px}.price{font-size:19px;font-weight:500}.config-bottom .pill{white-space:nowrap}.closing{height:min(86vw,760px);min-height:520px;position:relative;overflow:hidden}.closing>img{position:absolute;inset:0;height:100%;filter:brightness(.58) saturate(.45);transition:transform 1.2s}.closing:hover>img{transform:scale(1.025)}.closing-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.72),transparent 90%),linear-gradient(0deg,rgba(0,0,0,.55),transparent 55%)}.closing-copy{position:absolute;left:clamp(22px,11vw,165px);top:50%;transform:translateY(-50%)}.closing-copy h2{font-family:Manrope,sans-serif;font-size:clamp(64px,10vw,132px);font-weight:400;letter-spacing:-.09em;line-height:.94;margin:25px 0 34px}.closing-note{position:absolute;bottom:25px;right:clamp(22px,5vw,76px);font-size:9px;letter-spacing:.16em;color:#ccc}.footer{min-height:115px;padding:35px clamp(22px,5vw,76px);display:flex;align-items:center;justify-content:space-between;gap:25px;flex-wrap:wrap;border-top:1px solid #ffffff12}.footer .wordmark{font-size:14px}.footer span,.footer a:not(.wordmark),.footer small{font-size:8px;letter-spacing:.12em;color:#85858b}.reveal{animation:revealUp .8s both}.manifesto .reveal:nth-child(2){animation-delay:.12s}.manifesto .reveal:nth-child(3){animation-delay:.2s}@keyframes copyIn{from{opacity:0;transform:translateY(16px);filter:blur(5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}@keyframes revealUp{from{opacity:0;transform:translateY(24px);filter:blur(4px)}to{opacity:1;transform:none;filter:blur(0)}}@keyframes heroArrive{from{transform:scale(1.08);opacity:.65}to{transform:scale(1);opacity:1}}@keyframes linePulse{0%,100%{transform:scaleX(.55);opacity:.5}50%{transform:scaleX(1);opacity:1}}@media(max-width:900px){.desktop-nav{gap:20px;margin-left:0}.narrative-sticky{grid-template-columns:.9fr 1.1fr;gap:5vw}.feature-copy{grid-column:1;grid-row:2;align-self:start}.narrative-head{grid-column:1;grid-row:1}.feature-visual{grid-column:2;grid-row:1/3;height:54vh}.narrative-head h2{font-size:clamp(40px,6vw,58px)}.feature-copy h3{font-size:34px}.feature-description{min-height:0}.feature-stat{margin-top:18px;padding-top:15px}.feature-progress{margin-top:18px}.configurator{grid-template-columns:1fr 1fr}.config-image{min-height:430px}.config-details{padding:28px}.config-bottom{align-items:flex-start;flex-direction:column}.hero-copy{left:8vw}}@media(max-width:620px){.tnav{height:65px}.desktop-nav,.nav-cta{display:none}.menu-toggle{display:grid;place-items:center;border:0;background:transparent}.mobile-menu{position:absolute;display:flex;flex-direction:column;gap:22px;top:65px;left:0;right:0;background:rgba(5,5,5,.96);padding:25px 24px 32px;border-bottom:1px solid var(--line)}.mobile-menu a{font-size:16px}.hero{min-height:650px}.hero-image{object-position:58% center}.hero-shade{background:linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.1)),linear-gradient(0deg,rgba(0,0,0,.65),transparent 45%)}.hero-meta{top:83px;font-size:7px}.hero-meta span:last-child{display:none}.hero-copy{left:24px;right:24px;top:47%}.hero h1{font-size:clamp(72px,18vw,112px)}.hero-sub{font-size:18px}.hero-actions{align-items:flex-start;flex-direction:column;gap:20px;margin-top:27px}.hero-foot{font-size:7px;letter-spacing:.1em;bottom:18px}.hero-foot>span:first-child{display:none}.manifesto{padding:100px 24px 80px}.manifesto-title{font-size:clamp(47px,12vw,72px)}.manifesto-bottom{margin:30px 0 55px}.manifesto-bottom p{font-size:12px}.manifesto-image-wrap{margin:0 -24px;height:360px}.narrative{min-height:260vh}.narrative-sticky{height:100svh;min-height:690px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:22px;padding:90px 24px 35px}.narrative-head h2{font-size:48px;margin-top:15px}.narrative-intro{margin-top:12px;font-size:11px}.feature-visual{height:27vh;min-height:170px;flex:none;order:2}.feature-copy{order:3;padding:0}.feature-copy h3{font-size:30px;margin:8px 0}.feature-description{font-size:11px;line-height:1.6}.feature-stat{display:none}.feature-progress{margin-top:13px}.narrative-step{min-height:650px;height:100vh}.numbers{padding:100px 24px}.numbers h2{font-size:56px}.number-grid{grid-template-columns:1fr 1fr;margin-top:48px}.number-cell{padding:22px 8px 22px 0;border-bottom:1px solid var(--line)}.number-cell:nth-child(even){padding-left:18px;border-right:0}.number-cell:nth-child(n+3){border-bottom:0}.number-cell strong{font-size:38px}.number-cell p{font-size:10px}.model-selector{padding:95px 18px}.selector-heading h2{font-size:46px}.model-tabs{margin:35px 0 20px}.configurator{grid-template-columns:1fr}.config-image{min-height:270px;height:60vw}.config-details{padding:28px 22px}.config-details h3{font-size:54px}.config-bottom{flex-direction:row;align-items:center}.config-bottom .pill{padding:0 14px;font-size:10px}.closing{min-height:550px;height:80vh}.closing-copy{left:25px}.closing-copy h2{font-size:76px}.footer{justify-content:space-between;gap:20px}.footer span{order:3;width:100%;line-height:1.6}.footer small{display:none}}@media(prefers-reduced-motion:reduce){.tesla-site *, .tesla-site *:before,.tesla-site *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+`;
